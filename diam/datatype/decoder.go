@@ -10,7 +10,8 @@ import "fmt"
 type DecoderFunc func([]byte) (Type, error)
 
 // Decoder is a map of AVP data types indexed by TypeID.
-// Kept for backward compatibility.
+// External code may register custom decoders here; Decode() falls back to
+// this map for any TypeID not present in the built-in decoderArray.
 var Decoder = map[TypeID]DecoderFunc{
 	UnknownType:          DecodeUnknown,
 	AddressType:          DecodeAddress,
@@ -22,9 +23,11 @@ var Decoder = map[TypeID]DecoderFunc{
 	GroupedType:          DecodeGrouped,
 	IPFilterRuleType:     DecodeIPFilterRule,
 	IPv4Type:             DecodeIPv4,
+	IPv6Type:             DecodeIPv6,
 	Integer32Type:        DecodeInteger32,
 	Integer64Type:        DecodeInteger64,
 	OctetStringType:      DecodeOctetString,
+	QoSFilterRuleType:    DecodeQoSFilterRule,
 	TimeType:             DecodeTime,
 	UTF8StringType:       DecodeUTF8String,
 	Unsigned32Type:       DecodeUnsigned32,
@@ -61,11 +64,17 @@ func init() {
 }
 
 // Decode decodes a specific AVP data type from byte array to a DataType.
+// The fast path dispatches through decoderArray; TypeIDs not covered there
+// (including custom types registered in the exported Decoder map) fall back
+// to the map lookup.
 func Decode(t TypeID, b []byte) (Type, error) {
 	if int(t) >= 0 && int(t) < len(decoderArray) {
 		if f := decoderArray[t]; f != nil {
 			return f(b)
 		}
+	}
+	if f, ok := Decoder[t]; ok {
+		return f(b)
 	}
 	return nil, fmt.Errorf("Unknown data type: %d", t)
 }

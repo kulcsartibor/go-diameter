@@ -70,7 +70,7 @@ func (a *AVP) DecodeFromBytes(data []byte, application uint32, dictionary *dict.
 	a.Flags = data[4]
 	a.Length = int(uint24to32(data[5:8]))
 	if len(data) < a.Length {
-		return errAVPDataTooShort
+		return fmt.Errorf("%w: have %d need %d", errAVPDataTooShort, len(data), a.Length)
 	}
 	data = data[:a.Length] // this cuts padded bytes off
 	if len(data) < 8 {
@@ -98,7 +98,7 @@ func (a *AVP) DecodeFromBytes(data []byte, application uint32, dictionary *dict.
 	}
 	bodyLen := a.Length - hdrLength
 	if n := len(payload); n < bodyLen {
-		return errAVPDataTooShort
+		return fmt.Errorf("%w: have %d need %d", errAVPDataTooShort, n, bodyLen)
 	}
 	// Handle grouped AVPs directly to avoid an intermediate copy.
 	if dictAVP.Data.Type == datatype.GroupedType {
