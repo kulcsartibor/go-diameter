@@ -1,0 +1,48 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/fiorix/go-diameter/v4/bench
+cpu: Apple M1 Max
+                           │ bench/baseline/bench-raw.txt │
+                           │            sec/op            │
+DictParse1MSCC-10                            2.122µ ± 16%
+DictParse3MSCC-10                            3.184µ ± 12%
+DictParse5MSCC-10                            4.312µ ±  7%
+DictParseTriggerTTC-10                       2.561µ ±  3%
+DictParseCCRInitial-10                       2.294µ ±  4%
+DictParseCCA-10                              2.326µ ±  8%
+DictSerialize1MSCC-10                        971.6n ±  1%
+DictSerialize3MSCC-10                        1.516µ ±  4%
+DictSerialize5MSCC-10                        2.304µ ± 10%
+DictSerializeTriggerTTC-10                   1.325µ ±  0%
+DictSerializeCCA-10                          1.074µ ±  1%
+geomean                                      1.988µ
+
+                           │ bench/baseline/bench-raw.txt │
+                           │             B/op             │
+DictParse1MSCC-10                            1.751Ki ± 0%
+DictParse3MSCC-10                            2.587Ki ± 0%
+DictParse5MSCC-10                            3.588Ki ± 0%
+DictParseTriggerTTC-10                       2.103Ki ± 0%
+DictParseCCRInitial-10                       1.962Ki ± 0%
+DictParseCCA-10                              2.056Ki ± 0%
+DictSerialize1MSCC-10                          720.0 ± 0%
+DictSerialize3MSCC-10                        1.008Ki ± 0%
+DictSerialize5MSCC-10                        1.430Ki ± 0%
+DictSerializeTriggerTTC-10                     904.0 ± 0%
+DictSerializeCCA-10                            768.0 ± 0%
+geomean                                      1.509Ki
+
+                           │ bench/baseline/bench-raw.txt │
+                           │          allocs/op           │
+DictParse1MSCC-10                              51.00 ± 0%
+DictParse3MSCC-10                              78.00 ± 0%
+DictParse5MSCC-10                              112.0 ± 0%
+DictParseTriggerTTC-10                         61.00 ± 0%
+DictParseCCRInitial-10                         58.00 ± 0%
+DictParseCCA-10                                60.00 ± 0%
+DictSerialize1MSCC-10                          20.00 ± 0%
+DictSerialize3MSCC-10                          30.00 ± 0%
+DictSerialize5MSCC-10                          42.00 ± 0%
+DictSerializeTriggerTTC-10                     25.00 ± 0%
+DictSerializeCCA-10                            26.00 ± 0%
+geomean                                        45.04

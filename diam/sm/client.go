@@ -119,6 +119,29 @@ func (cli *Client) DialTLSExt(
 	})
 }
 
+// DialServer dials using a caller-constructed *diam.Server so that
+// fork-only Server fields — notably RawHandlers — apply to the client
+// connection, then performs the standard CER/CEA handshake.
+//
+// FORK: the package-level diam.Dial* helpers build their own Server and
+// expose no way to set RawHandlers; DialServer is the client-side entry
+// point for the raw fast path. srv.Handler and srv.Dict default to the
+// Client's when unset; srv.Addr is taken from addr when blank.
+func (cli *Client) DialServer(srv *diam.Server, addr string, timeout time.Duration) (diam.Conn, error) {
+	return cli.dial(func() (diam.Conn, error) {
+		if srv.Handler == nil {
+			srv.Handler = cli.Handler
+		}
+		if srv.Dict == nil {
+			srv.Dict = cli.Dict
+		}
+		if srv.Addr == "" {
+			srv.Addr = addr
+		}
+		return srv.Dial(timeout)
+	})
+}
+
 // NewConn is like Dial, but using an already open net.Conn.
 func (cli *Client) NewConn(rw net.Conn, addr string) (diam.Conn, error) {
 	return cli.dial(func() (diam.Conn, error) {

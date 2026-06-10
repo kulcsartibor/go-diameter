@@ -1,0 +1,83 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/fiorix/go-diameter/v4/bench
+cpu: Apple M1 Max
+                             │ /tmp/all-bench.txt │
+                             │       sec/op       │
+DictParse1MSCC-10                    2.007µ ±  1%
+DictParse3MSCC-10                    2.998µ ±  3%
+DictParse5MSCC-10                    4.158µ ±  1%
+DictParseTriggerTTC-10               2.432µ ±  0%
+DictParseCCRInitial-10               2.223µ ±  0%
+DictParseCCA-10                      2.241µ ±  0%
+DictSerialize1MSCC-10                958.8n ±  0%
+DictSerialize3MSCC-10                1.499µ ±  2%
+DictSerialize5MSCC-10                2.181µ ±  1%
+DictSerializeTriggerTTC-10           1.303µ ±  2%
+DictSerializeCCA-10                  1.048µ ±  1%
+StaticParse1MSCC-10                  118.7n ±  0%
+StaticParse3MSCC-10                  187.7n ±  2%
+StaticParse5MSCC-10                  274.6n ±  2%
+StaticParseTriggerTTC-10             137.0n ±  1%
+StaticParseCCRInitial-10             138.8n ±  2%
+StaticParseCCA-10                    153.7n ±  2%
+StaticSerialize1MSCC-10              104.5n ±  8%
+StaticSerialize3MSCC-10              166.1n ±  0%
+StaticSerialize5MSCC-10              240.5n ±  3%
+StaticSerializeTriggerTTC-10         129.2n ±  2%
+StaticSerializeCCA-10                129.3n ± 77%
+geomean                              545.4n
+
+                             │ /tmp/all-bench.txt │
+                             │        B/op        │
+DictParse1MSCC-10                  1.751Ki ± 0%
+DictParse3MSCC-10                  2.587Ki ± 0%
+DictParse5MSCC-10                  3.588Ki ± 0%
+DictParseTriggerTTC-10             2.103Ki ± 0%
+DictParseCCRInitial-10             1.962Ki ± 0%
+DictParseCCA-10                    2.056Ki ± 0%
+DictSerialize1MSCC-10                720.0 ± 0%
+DictSerialize3MSCC-10              1.008Ki ± 0%
+DictSerialize5MSCC-10              1.430Ki ± 0%
+DictSerializeTriggerTTC-10           904.0 ± 0%
+DictSerializeCCA-10                  768.0 ± 0%
+StaticParse1MSCC-10                  0.000 ± 0%
+StaticParse3MSCC-10                  0.000 ± 0%
+StaticParse5MSCC-10                  0.000 ± 0%
+StaticParseTriggerTTC-10             0.000 ± 0%
+StaticParseCCRInitial-10             0.000 ± 0%
+StaticParseCCA-10                    0.000 ± 0%
+StaticSerialize1MSCC-10              0.000 ± 0%
+StaticSerialize3MSCC-10              0.000 ± 0%
+StaticSerialize5MSCC-10              0.000 ± 0%
+StaticSerializeTriggerTTC-10         0.000 ± 0%
+StaticSerializeCCA-10                0.000 ± 0%
+geomean                                         ¹
+¹ summaries must be >0 to compute geomean
+
+                             │ /tmp/all-bench.txt │
+                             │     allocs/op      │
+DictParse1MSCC-10                    51.00 ± 0%
+DictParse3MSCC-10                    78.00 ± 0%
+DictParse5MSCC-10                    112.0 ± 0%
+DictParseTriggerTTC-10               61.00 ± 0%
+DictParseCCRInitial-10               58.00 ± 0%
+DictParseCCA-10                      60.00 ± 0%
+DictSerialize1MSCC-10                20.00 ± 0%
+DictSerialize3MSCC-10                30.00 ± 0%
+DictSerialize5MSCC-10                42.00 ± 0%
+DictSerializeTriggerTTC-10           25.00 ± 0%
+DictSerializeCCA-10                  26.00 ± 0%
+StaticParse1MSCC-10                  0.000 ± 0%
+StaticParse3MSCC-10                  0.000 ± 0%
+StaticParse5MSCC-10                  0.000 ± 0%
+StaticParseTriggerTTC-10             0.000 ± 0%
+StaticParseCCRInitial-10             0.000 ± 0%
+StaticParseCCA-10                    0.000 ± 0%
+StaticSerialize1MSCC-10              0.000 ± 0%
+StaticSerialize3MSCC-10              0.000 ± 0%
+StaticSerialize5MSCC-10              0.000 ± 0%
+StaticSerializeTriggerTTC-10         0.000 ± 0%
+StaticSerializeCCA-10                0.000 ± 0%
+geomean                                         ¹
+¹ summaries must be >0 to compute geomean
