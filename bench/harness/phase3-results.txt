@@ -1,0 +1,7 @@
+RESULT codec=static conc=64 mscc=3 sessions=1011972 requests=6071770 elapsed=60.0s TPS=101196 p50=1024µs p95=1024µs p99=2048µs
+RESULT codec=static conc=64 mscc=3 sessions=1037451 requests=6224646 elapsed=60.0s TPS=103744 p50=1024µs p95=1024µs p99=2048µs
+RESULT codec=static conc=64 mscc=3 sessions=1041959 requests=6251684 elapsed=60.0s TPS=104195 p50=1024µs p95=1024µs p99=2048µs
+RESULT codec=dict conc=64 mscc=3 sessions=816555 requests=4899291 elapsed=60.0s TPS=81655 p50=1024µs p95=2048µs p99=2048µs
+RESULT codec=dict conc=64 mscc=3 sessions=815794 requests=4894704 elapsed=60.0s TPS=81578 p50=1024µs p95=2048µs p99=2048µs
+RESULT codec=dict conc=64 mscc=3 sessions=820953 requests=4925685 elapsed=60.0s TPS=82095 p50=1024µs p95=2048µs p99=2048µs
+DONE

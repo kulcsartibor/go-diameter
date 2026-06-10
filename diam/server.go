@@ -208,23 +208,43 @@ func (c *conn) serve() {
 		cb(c.writer)
 	}
 	for {
+		// FORK: raw-codec fast path. When a RawHandler matches the
+		// message's (AppID, CmdCode), it consumes the message here and
+		// the dictionary codec is never invoked. handled=false leaves
+		// the connection untouched for the stock path below.
+		if handled, err := c.tryServeRaw(); err != nil {
+			c.reportReadError(nil, err)
+			break
+		} else if handled {
+			continue
+		}
 		m, err := c.readMessage()
 		if err != nil {
 			// Report errors to the channel, except EOF.
 			// Connection close is handled by the defer above,
 			// after draining in-flight handlers via hwg.Wait().
-			if err != io.EOF && err != io.ErrUnexpectedEOF {
-				h := c.server.Handler
-				if h == nil {
-					h = DefaultServeMux
-				}
-				if er, ok := h.(ErrorReporter); ok {
-					er.Error(&ErrorReport{c.writer, m, err})
-				}
-			}
+			c.reportReadError(m, err)
 			break
 		}
 		c.dispatch(m)
+	}
+}
+
+// reportReadError forwards a read-loop error to the Handler's
+// ErrorReporter, skipping clean EOFs. Connection close is handled by
+// serve's defer. m may be nil (e.g. raw fast-path errors).
+// FORK: extracted from serve so the raw fast path reports errors
+// identically to the stock readMessage path.
+func (c *conn) reportReadError(m *Message, err error) {
+	if err == io.EOF || err == io.ErrUnexpectedEOF {
+		return
+	}
+	h := c.server.Handler
+	if h == nil {
+		h = DefaultServeMux
+	}
+	if er, ok := h.(ErrorReporter); ok {
+		er.Error(&ErrorReport{c.writer, m, err})
 	}
 }
 
@@ -666,6 +686,15 @@ type Server struct {
 	//		}()
 	//	}
 	OnNewConnection func(Conn)
+
+	// FORK: RawHandlers routes messages by (Application-Id, Command-Code)
+	// read from the fixed header to a RawHandler that receives the
+	// undecoded bytes, bypassing the dictionary codec (see rawhook.go).
+	// Messages with no matching key take the normal Handler path. TCP
+	// only; SCTP connections always use the dictionary path. Must be set
+	// before Serve/Dial and not mutated afterwards (read without locking
+	// on the connection read goroutine).
+	RawHandlers map[RawKey]RawHandler
 
 	mu        sync.Mutex
 	listeners map[net.Listener]struct{}

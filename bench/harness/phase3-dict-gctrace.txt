@@ -1,0 +1,5 @@
+gc 8791 @65.998s 1%: 0.037+0.31+0.030 ms clock, 0.37+0.015/0.55/0.17+0.30 ms cpu, 3->3->1 MB, 4 MB goal, 0 MB stacks, 0 MB globals, 10 P
+gc 8792 @66.005s 1%: 0.052+0.21+0.003 ms clock, 0.52+0.017/0.51/0.14+0.038 ms cpu, 3->3->1 MB, 4 MB goal, 0 MB stacks, 0 MB globals, 10 P
+gc 8793 @66.012s 1%: 0.072+0.21+0.003 ms clock, 0.72+0.017/0.54/0.094+0.037 ms cpu, 3->3->1 MB, 4 MB goal, 0 MB stacks, 0 MB globals, 10 P
+gc 8794 @66.020s 1%: 0.073+0.40+0.021 ms clock, 0.73+0.036/0.53/0.10+0.21 ms cpu, 3->3->1 MB, 4 MB goal, 0 MB stacks, 0 MB globals, 10 P
+gc 8795 @66.028s 1%: 0.043+0.44+0.037 ms clock, 0.43+0.035/0.61/0.11+0.37 ms cpu, 3->3->1 MB, 4 MB goal, 0 MB stacks, 0 MB globals, 10 P
