@@ -2,11 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package gycodec
+package gy
 
 import (
 	"bytes"
 	"testing"
+
+	"github.com/fiorix/go-diameter/v4/staticodec"
 )
 
 // TestMbitSurfacing implements the codec-design.md §5.4 conformance
@@ -26,10 +28,10 @@ func TestMbitSurfacing(t *testing.T) {
 	if m.Other[0].Code != 999001 || m.Other[0].VendorID != 99999 {
 		t.Errorf("Other[0]: got code %d vendor %d, want 999001/99999", m.Other[0].Code, m.Other[0].VendorID)
 	}
-	if m.Other[0].Flags&FlagMandatory == 0 {
+	if m.Other[0].Flags&staticodec.FlagMandatory == 0 {
 		t.Error("Other[0]: M-bit lost")
 	}
-	if m.Other[1].Code != 999002 || m.Other[1].Flags&FlagMandatory != 0 {
+	if m.Other[1].Code != 999002 || m.Other[1].Flags&staticodec.FlagMandatory != 0 {
 		t.Errorf("Other[1]: got code %d flags %#x, want 999002 without M-bit", m.Other[1].Code, m.Other[1].Flags)
 	}
 
@@ -50,15 +52,15 @@ func TestMbitNested(t *testing.T) {
 	// Build the message with the static codec itself: MSCC with
 	// Rating-Group plus a hand-rolled unknown AVP in Other.
 	var in CCR
-	in.Hdr.CommandFlags = FlagRequest
+	in.Hdr.CommandFlags = staticodec.FlagRequest
 	in.Hdr.HopByHopID = 1
 	in.Hdr.EndToEndID = 2
 	in.SessionID = []byte("s;1")
 	in.MSCC = append(in.MSCC, MSCC{
 		RatingGroup:    7,
 		HasRatingGroup: true,
-		Other: []RawAVP{{
-			Code: 888001, VendorID: 4242, Flags: FlagVendor | FlagMandatory,
+		Other: []staticodec.RawAVP{{
+			Code: 888001, VendorID: 4242, Flags: staticodec.FlagVendor | staticodec.FlagMandatory,
 			Data: []byte{1, 2, 3},
 		}},
 	})

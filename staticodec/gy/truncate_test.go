@@ -2,9 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package gycodec
+package gy
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/fiorix/go-diameter/v4/staticodec"
+)
 
 // TestTruncation: every fixture truncated at every 4-byte boundary (and
 // every length 0..19) must return an error and never panic
@@ -40,7 +44,7 @@ func TestTruncationPatchedLength(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			for l := 20; l < len(fix); l += 4 {
 				buf := append([]byte(nil), fix[:l]...)
-				putUint24(buf[1:4], uint32(l))
+				staticodec.PutUint24(buf[1:4], uint32(l))
 				m := newMessageFor(name)
 				if err := m.ParseFrom(buf); err == nil {
 					_ = m.AppendTo(nil)
@@ -58,17 +62,17 @@ func TestGarbageHeader(t *testing.T) {
 		buf  []byte
 		want error
 	}{
-		{"empty", nil, ErrTruncated},
-		{"short", make([]byte, 19), ErrTruncated},
-		{"bad version", append([]byte{2}, make([]byte, 19)...), ErrBadVersion},
-		{"zero length", append([]byte{1}, make([]byte, 19)...), ErrLengthMismatch},
+		{"empty", nil, staticodec.ErrTruncated},
+		{"short", make([]byte, 19), staticodec.ErrTruncated},
+		{"bad version", append([]byte{2}, make([]byte, 19)...), staticodec.ErrBadVersion},
+		{"zero length", append([]byte{1}, make([]byte, 19)...), staticodec.ErrLengthMismatch},
 		{"wrong command", func() []byte {
 			b := make([]byte, 20)
 			b[0] = 1
-			putUint24(b[1:4], 20)
-			putUint24(b[5:8], 257) // CER, not CC
+			staticodec.PutUint24(b[1:4], 20)
+			staticodec.PutUint24(b[5:8], 257) // CER, not CC
 			return b
-		}(), ErrUnexpectedCommand},
+		}(), staticodec.ErrUnexpectedCommand},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

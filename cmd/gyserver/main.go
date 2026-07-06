@@ -28,7 +28,7 @@ import (
 	"github.com/fiorix/go-diameter/v4/diam/datatype"
 	"github.com/fiorix/go-diameter/v4/diam/dict"
 	"github.com/fiorix/go-diameter/v4/diam/sm"
-	"github.com/fiorix/go-diameter/v4/gycodec"
+	"github.com/fiorix/go-diameter/v4/staticodec/gy"
 )
 
 const grantedTotalOctets = 1_000_000
@@ -98,13 +98,13 @@ func main() {
 // replies with a CCA built by gycodec, reusing pooled structs and write
 // buffers so the steady-state hot path allocates nothing.
 func staticCCRHandler() diam.RawHandler {
-	ccrPool := sync.Pool{New: func() interface{} { return new(gycodec.CCR) }}
-	ccaPool := sync.Pool{New: func() interface{} { return new(gycodec.CCA) }}
+	ccrPool := sync.Pool{New: func() interface{} { return new(gy.CCR) }}
+	ccaPool := sync.Pool{New: func() interface{} { return new(gy.CCA) }}
 	bufPool := sync.Pool{New: func() interface{} { b := make([]byte, 0, 1024); return &b }}
 
 	return func(c diam.Conn, hdr *diam.Header, msg []byte) {
-		ccr := ccrPool.Get().(*gycodec.CCR)
-		cca := ccaPool.Get().(*gycodec.CCA)
+		ccr := ccrPool.Get().(*gy.CCR)
+		cca := ccaPool.Get().(*gy.CCA)
 		bufp := bufPool.Get().(*[]byte)
 		defer func() {
 			ccrPool.Put(ccr)
@@ -137,12 +137,12 @@ func staticCCRHandler() diam.RawHandler {
 		// Grant a fixed quota per requested MSCC.
 		for i := range ccr.MSCC {
 			in := &ccr.MSCC[i]
-			out := gycodec.MSCC{
+			out := gy.MSCC{
 				RatingGroup:       in.RatingGroup,
 				HasRatingGroup:    in.HasRatingGroup,
 				ServiceIdentifier: in.ServiceIdentifier, HasServiceIdentifier: in.HasServiceIdentifier,
 				HasGranted: true,
-				Granted: gycodec.GrantedServiceUnit{
+				Granted: gy.GrantedServiceUnit{
 					CCTotalOctets:    grantedTotalOctets,
 					HasCCTotalOctets: true,
 				},
