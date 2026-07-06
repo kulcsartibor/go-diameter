@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Command gycodegen generates the static Gy codec (package gycodec) from
-// the dictionary XML files shipped with go-diameter, filtered through the
-// curated allowlist in model.go (codec-design.md §2.2).
+// Command staticodegen generates the static Diameter codecs (one Go package
+// per application under staticodec/) from the dictionary XML files shipped
+// with go-diameter, filtered through the curated allowlists in model.go.
 //
 // The dictionary stays the source of truth for AVP codes, vendor IDs,
 // types, flags and enum values; the allowlist defines which AVPs are
 // modeled as struct fields, their Go names, and the fixed emission order.
 //
-// Usage (via go:generate in gycodec/gen.go):
+// Usage (via go:generate in staticodec/gen.go):
 //
-//	gycodegen -dict diam/dict/testdata -out gycodec
+//	staticodegen -dict diam/dict/testdata -out staticodec
 //
 // This is a build tool, not a hot path: boring and readable on purpose.
 package main
@@ -30,40 +30,48 @@ import (
 )
 
 // dictFiles are the XML sources consulted, in resolution priority order
-// (first definition of an AVP name wins).
+// (first definition of an AVP name wins). Application-specific files come
+// last so they never override shared base/RFC definitions.
 var dictFiles = []string{
 	"credit_control.xml",
 	"tgpp_ro_rf.xml",
 	"base.xml",
 	"network_access_server.xml", // Called-Station-Id
+	"diameter_sy.xml",           // Sy: Policy-Counter-*, SL/SN-Request-Type
 }
 
 func main() {
 	dictDir := flag.String("dict", "diam/dict/testdata", "directory with dictionary XML files")
-	outDir := flag.String("out", "gycodec", "output directory for generated files")
+	outDir := flag.String("out", "staticodec", "staticodec root; each app writes to <out>/<pkg>")
 	flag.Parse()
 
 	avps, err := loadDictionaries(*dictDir)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	if err := resolveAll(avps); err != nil {
 		log.Fatal(err)
 	}
 
-	files := map[string][]byte{
-		"grouped.gen.go": emitGroups(),
-		"ccr.gen.go":     emitMessage(&messages[0]),
-		"cca.gen.go":     emitMessage(&messages[1]),
-		"enums.gen.go":   emitEnums(avps),
-	}
-	for name, src := range files {
-		path := filepath.Join(*outDir, name)
-		if err := os.WriteFile(path, src, 0644); err != nil {
+	for i := range apps {
+		app := &apps[i]
+		dir := filepath.Join(*outDir, app.pkg)
+		if err := os.MkdirAll(dir, 0755); err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println("wrote", path)
+		write := func(name string, src []byte) {
+			path := filepath.Join(dir, name)
+			if err := os.WriteFile(path, src, 0644); err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println("wrote", path)
+		}
+		write("grouped.gen.go", emitGroups(app))
+		for j := range app.messages {
+			m := &app.messages[j]
+			write(strings.ToLower(m.name)+".gen.go", emitMessage(app, m))
+		}
+		write("enums.gen.go", emitEnums(app, avps))
 	}
 }
 
@@ -90,8 +98,8 @@ func loadDictionaries(dir string) (map[string]*dict.AVP, error) {
 	return avps, nil
 }
 
-// resolveAll fills code/vendorID/flags/kind on every allowlisted field
-// from the dictionary, validating the allowlist against the XML.
+// resolveAll fills code/vendorID/flags/kind on every allowlisted field of
+// every application from the dictionary, validating the allowlist.
 func resolveAll(avps map[string]*dict.AVP) error {
 	resolve := func(s *structDef) error {
 		for i := range s.fields {
@@ -115,14 +123,17 @@ func resolveAll(avps map[string]*dict.AVP) error {
 		}
 		return nil
 	}
-	for i := range groups {
-		if err := resolve(&groups[i]); err != nil {
-			return err
+	for i := range apps {
+		app := &apps[i]
+		for j := range app.groups {
+			if err := resolve(&app.groups[j]); err != nil {
+				return fmt.Errorf("app %s: %w", app.pkg, err)
+			}
 		}
-	}
-	for i := range messages {
-		if err := resolve(&messages[i].structDef); err != nil {
-			return err
+		for j := range app.messages {
+			if err := resolve(&app.messages[j].structDef); err != nil {
+				return fmt.Errorf("app %s: %w", app.pkg, err)
+			}
 		}
 	}
 	return nil

@@ -2,13 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-//go:build gycodec_poison
+//go:build staticodec_poison
 
-package gycodec
+package gy
 
 import (
 	"bytes"
 	"testing"
+
+	"github.com/fiorix/go-diameter/v4/staticodec"
 )
 
 // TestPoisonClone verifies the §2.5 ownership contract mechanically:
@@ -27,7 +29,7 @@ func TestPoisonClone(t *testing.T) {
 	clone := m.Clone()
 	retained := m.SessionID // deliberate ownership violation
 
-	Poison(buf) // simulate the pool recycling the read buffer
+	staticodec.Poison(buf) // simulate the pool recycling the read buffer
 
 	// The clone owns its memory: still equal to a fresh parse.
 	var fresh CCR
@@ -68,11 +70,11 @@ func TestPoisonRoundTripAfterClone(t *testing.T) {
 		switch v := m.(type) {
 		case *CCR:
 			c := v.Clone()
-			Poison(buf)
+			staticodec.Poison(buf)
 			out = c.AppendTo(nil)
 		case *CCA:
 			c := v.Clone()
-			Poison(buf)
+			staticodec.Poison(buf)
 			out = c.AppendTo(nil)
 		}
 		if !bytes.Equal(fix, out) {

@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-//go:build gycodec_poison
+//go:build staticodec_poison
 
-package gycodec
+package staticodec
 
 // PoisonEnabled reports whether poison mode is compiled in.
 const PoisonEnabled = true

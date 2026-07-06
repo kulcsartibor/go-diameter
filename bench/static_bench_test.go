@@ -7,7 +7,7 @@ package bench
 import (
 	"testing"
 
-	"github.com/fiorix/go-diameter/v4/gycodec"
+	"github.com/fiorix/go-diameter/v4/staticodec/gy"
 )
 
 // Static-codec counterparts of the dictionary baseline, exercising the
@@ -16,7 +16,7 @@ import (
 
 func benchmarkStaticParseCCR(b *testing.B, name string) {
 	fix := loadFixture(b, name)
-	var m gycodec.CCR
+	var m gy.CCR
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -28,7 +28,7 @@ func benchmarkStaticParseCCR(b *testing.B, name string) {
 
 func benchmarkStaticParseCCA(b *testing.B, name string) {
 	fix := loadFixture(b, name)
-	var m gycodec.CCA
+	var m gy.CCA
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -40,7 +40,7 @@ func benchmarkStaticParseCCA(b *testing.B, name string) {
 
 func benchmarkStaticSerializeCCR(b *testing.B, name string) {
 	fix := loadFixture(b, name)
-	var m gycodec.CCR
+	var m gy.CCR
 	if err := m.ParseFrom(fix); err != nil {
 		b.Fatal(err)
 	}
@@ -54,7 +54,7 @@ func benchmarkStaticSerializeCCR(b *testing.B, name string) {
 
 func benchmarkStaticSerializeCCA(b *testing.B, name string) {
 	fix := loadFixture(b, name)
-	var m gycodec.CCA
+	var m gy.CCA
 	if err := m.ParseFrom(fix); err != nil {
 		b.Fatal(err)
 	}

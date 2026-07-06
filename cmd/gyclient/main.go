@@ -24,7 +24,7 @@ import (
 	"github.com/fiorix/go-diameter/v4/diam/datatype"
 	"github.com/fiorix/go-diameter/v4/diam/dict"
 	"github.com/fiorix/go-diameter/v4/diam/sm"
-	"github.com/fiorix/go-diameter/v4/gycodec"
+	"github.com/fiorix/go-diameter/v4/staticodec/gy"
 )
 
 func main() {
@@ -241,7 +241,7 @@ func (r *runner) request(sessionID string, reqType, reqNum uint32) {
 }
 
 func (r *runner) buildStatic(sessionID string, reqType, reqNum, hbh uint32) []byte {
-	var ccr gycodec.CCR
+	var ccr gy.CCR
 	ccr.Hdr.CommandFlags = diam.RequestFlag
 	ccr.Hdr.HopByHopID = hbh
 	ccr.Hdr.EndToEndID = hbh
@@ -257,7 +257,7 @@ func (r *runner) buildStatic(sessionID string, reqType, reqNum, hbh uint32) []by
 	ccr.CCRequestNumber = reqNum
 	ccr.HasCCRequestNumber = true
 	for i := 0; i < r.mscc; i++ {
-		ccr.MSCC = append(ccr.MSCC, gycodec.MSCC{
+		ccr.MSCC = append(ccr.MSCC, gy.MSCC{
 			RatingGroup: uint32(10 + i), HasRatingGroup: true,
 			ServiceIdentifier: uint32(100 + i), HasServiceIdentifier: true,
 			HasRequested: true,

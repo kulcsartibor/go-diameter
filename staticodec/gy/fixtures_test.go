@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package gycodec
+package gy
 
 import (
 	"os"
@@ -28,7 +28,7 @@ var fixtureNames = []string{
 
 func loadFixture(tb testing.TB, name string) []byte {
 	tb.Helper()
-	b, err := os.ReadFile(filepath.Join("..", "bench", "fixtures", name+".bin"))
+	b, err := os.ReadFile(filepath.Join("..", "..", "bench", "fixtures", name+".bin"))
 	if err != nil {
 		tb.Fatalf("fixture %s: %v (run: go run bench/fixtures/gen.go)", name, err)
 	}

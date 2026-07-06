@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package gycodec
+package gy
 
 import (
 	"bytes"
@@ -13,6 +13,7 @@ import (
 	"github.com/fiorix/go-diameter/v4/diam/avp"
 	"github.com/fiorix/go-diameter/v4/diam/datatype"
 	"github.com/fiorix/go-diameter/v4/diam/dict"
+	"github.com/fiorix/go-diameter/v4/staticodec"
 )
 
 // TestCrossCodecEquivalence implements codec-design.md §5.1: the
@@ -264,7 +265,7 @@ func dictTime(avps []*diam.AVP, code uint32) uint32 {
 		if d, ok := a.Data.(datatype.Time); ok {
 			b, _ := datatype.Time(d).Serialize(), error(nil)
 			if len(b) == 4 {
-				return be32(b)
+				return staticodec.BE32(b)
 			}
 		}
 	}

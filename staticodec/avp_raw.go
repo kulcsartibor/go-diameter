@@ -2,7 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package gycodec
+// Package staticodec is the shared runtime for the generated static
+// Diameter codecs. Each Diameter application (Gy, Sy, …) has its own
+// sub-package (staticodec/gy, staticodec/sy) holding generated message
+// types; those packages import this one for AVP walking, header handling,
+// and the append helpers. See cmd/staticodegen.
+package staticodec
 
 import (
 	"encoding/binary"
@@ -19,21 +24,21 @@ const (
 // Pre-allocated sentinel errors; the parse path never calls fmt.Errorf.
 var (
 	// ErrTruncated reports a buffer shorter than a declared length.
-	ErrTruncated = errors.New("gycodec: truncated message")
+	ErrTruncated = errors.New("staticodec: truncated message")
 	// ErrBadAVPLength reports an AVP whose declared length is impossible
 	// (shorter than its own header or extending past the buffer).
-	ErrBadAVPLength = errors.New("gycodec: bad AVP length")
+	ErrBadAVPLength = errors.New("staticodec: bad AVP length")
 	// ErrBadVersion reports a Diameter version other than 1.
-	ErrBadVersion = errors.New("gycodec: unsupported Diameter version")
+	ErrBadVersion = errors.New("staticodec: unsupported Diameter version")
 	// ErrLengthMismatch reports a header Message-Length that disagrees
 	// with the buffer length.
-	ErrLengthMismatch = errors.New("gycodec: message length disagrees with buffer")
+	ErrLengthMismatch = errors.New("staticodec: message length disagrees with buffer")
 	// ErrBadAVPData reports AVP data whose size is invalid for its
 	// declared type (e.g. a 3-byte Unsigned32).
-	ErrBadAVPData = errors.New("gycodec: bad AVP data size for type")
+	ErrBadAVPData = errors.New("staticodec: bad AVP data size for type")
 	// ErrUnexpectedCommand reports a message whose command code does not
-	// match the type it is being parsed into (CCR/CCA expect 272).
-	ErrUnexpectedCommand = errors.New("gycodec: unexpected command code")
+	// match the type it is being parsed into.
+	ErrUnexpectedCommand = errors.New("staticodec: unexpected command code")
 )
 
 // RawAVP preserves an AVP the static codec does not model, so unknown
@@ -48,21 +53,33 @@ type RawAVP struct {
 	Data     []byte
 }
 
-// clone returns a deep copy of the RawAVP with its own backing array.
-func (r RawAVP) clone() RawAVP {
+// Clone returns a deep copy of the RawAVP with its own backing array.
+func (r RawAVP) Clone() RawAVP {
 	c := r
 	c.Data = append([]byte(nil), r.Data...)
 	return c
 }
 
-// appendTo re-serializes the raw AVP, preserving its original flags.
-func (r RawAVP) appendTo(dst []byte) []byte {
+// AppendTo re-serializes the raw AVP, preserving its original flags.
+func (r RawAVP) AppendTo(dst []byte) []byte {
 	dst = appendAVPHeader(dst, r.Code, r.Flags, r.VendorID, len(r.Data))
 	dst = append(dst, r.Data...)
 	return appendPad4(dst, len(r.Data))
 }
 
-// walkAVP decodes the AVP header at buf[off:] and returns the AVP's code,
+// CloneRawAVPs deep-copies a RawAVP slice (used by generated Clone methods).
+func CloneRawAVPs(in []RawAVP) []RawAVP {
+	if in == nil {
+		return nil
+	}
+	out := make([]RawAVP, len(in))
+	for i := range in {
+		out[i] = in[i].Clone()
+	}
+	return out
+}
+
+// WalkAVP decodes the AVP header at buf[off:] and returns the AVP's code,
 // flags, vendor ID (0 if no V-bit), its data sub-slice (padding excluded),
 // and the offset of the next AVP (padding included). It never panics on
 // malformed input; every structural violation returns an error:
@@ -70,7 +87,7 @@ func (r RawAVP) appendTo(dst []byte) []byte {
 //   - declared length smaller than the AVP's own header
 //   - declared length extending past the buffer
 //   - V-bit set but length too small for the Vendor-ID field
-func walkAVP(buf []byte, off int) (code uint32, flags byte, vendorID uint32, data []byte, next int, err error) {
+func WalkAVP(buf []byte, off int) (code uint32, flags byte, vendorID uint32, data []byte, next int, err error) {
 	if len(buf)-off < 8 {
 		return 0, 0, 0, nil, 0, ErrTruncated
 	}
@@ -113,18 +130,18 @@ func uint24(b []byte) uint32 {
 	return uint32(b[0])<<16 | uint32(b[1])<<8 | uint32(b[2])
 }
 
-// putUint24 encodes a 24-bit big-endian unsigned integer in place.
-func putUint24(b []byte, n uint32) {
+// PutUint24 encodes a 24-bit big-endian unsigned integer in place.
+func PutUint24(b []byte, n uint32) {
 	b[0] = byte(n >> 16)
 	b[1] = byte(n >> 8)
 	b[2] = byte(n)
 }
 
-// be32 decodes a big-endian uint32 from exactly 4 bytes.
-func be32(b []byte) uint32 { return binary.BigEndian.Uint32(b) }
+// BE32 decodes a big-endian uint32 from exactly 4 bytes.
+func BE32(b []byte) uint32 { return binary.BigEndian.Uint32(b) }
 
-// be64 decodes a big-endian uint64 from exactly 8 bytes.
-func be64(b []byte) uint64 { return binary.BigEndian.Uint64(b) }
+// BE64 decodes a big-endian uint64 from exactly 8 bytes.
+func BE64(b []byte) uint64 { return binary.BigEndian.Uint64(b) }
 
 // appendAVPHeader appends an 8- or 12-byte AVP header. dataLen is the
 // unpadded data size; the length field is header+data, padding excluded.
@@ -136,7 +153,7 @@ func appendAVPHeader(dst []byte, code uint32, flags byte, vendorID uint32, dataL
 	var h [12]byte
 	binary.BigEndian.PutUint32(h[0:4], code)
 	h[4] = flags
-	putUint24(h[5:8], uint32(hdrLen+dataLen))
+	PutUint24(h[5:8], uint32(hdrLen+dataLen))
 	if hdrLen == 12 {
 		binary.BigEndian.PutUint32(h[8:12], vendorID)
 	}
@@ -157,48 +174,48 @@ func appendPad4(dst []byte, dataLen int) []byte {
 	return dst
 }
 
-// appendAVPUint32 appends a complete 4-byte-data AVP (Unsigned32, Time).
-func appendAVPUint32(dst []byte, code uint32, flags byte, vendorID uint32, v uint32) []byte {
+// AppendAVPUint32 appends a complete 4-byte-data AVP (Unsigned32, Time).
+func AppendAVPUint32(dst []byte, code uint32, flags byte, vendorID uint32, v uint32) []byte {
 	dst = appendAVPHeader(dst, code, flags, vendorID, 4)
 	var b [4]byte
 	binary.BigEndian.PutUint32(b[:], v)
 	return append(dst, b[:]...)
 }
 
-// appendAVPUint64 appends a complete 8-byte-data AVP (Unsigned64).
-func appendAVPUint64(dst []byte, code uint32, flags byte, vendorID uint32, v uint64) []byte {
+// AppendAVPUint64 appends a complete 8-byte-data AVP (Unsigned64).
+func AppendAVPUint64(dst []byte, code uint32, flags byte, vendorID uint32, v uint64) []byte {
 	dst = appendAVPHeader(dst, code, flags, vendorID, 8)
 	var b [8]byte
 	binary.BigEndian.PutUint64(b[:], v)
 	return append(dst, b[:]...)
 }
 
-// appendAVPInt32 appends a complete 4-byte-data AVP (Enumerated, Integer32).
-func appendAVPInt32(dst []byte, code uint32, flags byte, vendorID uint32, v int32) []byte {
-	return appendAVPUint32(dst, code, flags, vendorID, uint32(v))
+// AppendAVPInt32 appends a complete 4-byte-data AVP (Enumerated, Integer32).
+func AppendAVPInt32(dst []byte, code uint32, flags byte, vendorID uint32, v int32) []byte {
+	return AppendAVPUint32(dst, code, flags, vendorID, uint32(v))
 }
 
-// appendAVPBytes appends a complete variable-length AVP (OctetString,
+// AppendAVPBytes appends a complete variable-length AVP (OctetString,
 // UTF8String, DiameterIdentity, Address) with padding.
-func appendAVPBytes(dst []byte, code uint32, flags byte, vendorID uint32, v []byte) []byte {
+func AppendAVPBytes(dst []byte, code uint32, flags byte, vendorID uint32, v []byte) []byte {
 	dst = appendAVPHeader(dst, code, flags, vendorID, len(v))
 	dst = append(dst, v...)
 	return appendPad4(dst, len(v))
 }
 
-// openGroupedAVP appends a grouped-AVP header with a zero length field
-// and returns the offset of that header for closeGroupedAVP to backpatch.
+// OpenGroupedAVP appends a grouped-AVP header with a zero length field
+// and returns the offset of that header for CloseGroupedAVP to backpatch.
 // Children are appended between the two calls (codec-design.md §2.6,
 // reserve-and-backpatch).
-func openGroupedAVP(dst []byte, code uint32, flags byte, vendorID uint32) (out []byte, hdrOff int) {
+func OpenGroupedAVP(dst []byte, code uint32, flags byte, vendorID uint32) (out []byte, hdrOff int) {
 	hdrOff = len(dst)
 	return appendAVPHeader(dst, code, flags, vendorID, 0), hdrOff
 }
 
-// closeGroupedAVP backpatches the length of the grouped AVP opened at
+// CloseGroupedAVP backpatches the length of the grouped AVP opened at
 // hdrOff. Grouped data is a sequence of padded AVPs, so no trailing
 // padding is required.
-func closeGroupedAVP(dst []byte, hdrOff int) []byte {
-	putUint24(dst[hdrOff+5:hdrOff+8], uint32(len(dst)-hdrOff))
+func CloseGroupedAVP(dst []byte, hdrOff int) []byte {
+	PutUint24(dst[hdrOff+5:hdrOff+8], uint32(len(dst)-hdrOff))
 	return dst
 }

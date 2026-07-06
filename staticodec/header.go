@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package gycodec
+package staticodec
 
 import "encoding/binary"
 
@@ -53,22 +53,22 @@ func ParseHeader(buf []byte) (Header, error) {
 	return h, nil
 }
 
-// appendHeader appends the 20-byte header with a zero length field; the
+// AppendHeader appends the 20-byte header with a zero length field; the
 // caller backpatches the length once the body is appended.
-func appendHeader(dst []byte, h Header) []byte {
+func AppendHeader(dst []byte, h Header) []byte {
 	var b [HeaderLength]byte
 	b[0] = 1 // version
 	// b[1:4] message length: backpatched by the caller
 	b[4] = h.CommandFlags
-	putUint24(b[5:8], h.CommandCode)
+	PutUint24(b[5:8], h.CommandCode)
 	binary.BigEndian.PutUint32(b[8:12], h.ApplicationID)
 	binary.BigEndian.PutUint32(b[12:16], h.HopByHopID)
 	binary.BigEndian.PutUint32(b[16:20], h.EndToEndID)
 	return append(dst, b[:]...)
 }
 
-// backpatchMessageLength writes the final message length into the header
+// BackpatchMessageLength writes the final message length into the header
 // that was appended at msgOff.
-func backpatchMessageLength(dst []byte, msgOff int) {
-	putUint24(dst[msgOff+1:msgOff+4], uint32(len(dst)-msgOff))
+func BackpatchMessageLength(dst []byte, msgOff int) {
+	PutUint24(dst[msgOff+1:msgOff+4], uint32(len(dst)-msgOff))
 }
